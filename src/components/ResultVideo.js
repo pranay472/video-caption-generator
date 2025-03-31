@@ -6,7 +6,7 @@ import SparklesIcon from "./SparklesIcon";
 import roboto from "../fonts/Roboto-Regular.ttf";
 import noto from "../fonts/NotoSans-Italic-VariableFont_wdth,wght.ttf"
 export default function ResultVideo({ filename, transcriptionItems }) {
-  const videoUrl = "https://pranay-video-scribe.s3.amazonaws.com/" + filename;
+  const videoUrl = "https://bucket-major-project.s3.amazonaws.com/" + filename;
   const [loaded, setLoaded] = useState(false);
   const [primaryColour, setPrimaryColour] = useState("#FFFFFF");
   const [outlineColour, setOutlineColour] = useState("#000000");

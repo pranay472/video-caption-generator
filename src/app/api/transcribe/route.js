@@ -10,7 +10,7 @@ dotenv.config();
 
 function getClient() {
   return new TranscribeClient({
-    region: "eu-north-1",
+    region: "ap-south-1",
     credentials: {
       accessKeyId: process.env.ACCE_KEY,
       secretAccessKey:process.env.SEC_ACCESS_KEY,
@@ -24,7 +24,7 @@ function createTranscriptionCommand(filename) {
     OutputKey: filename + ".transcription",
     IdentifyLanguage: true,
     Media: {
-      MediaFileUri: "s3://" + "pranay-video-scribe" + "/" + filename,
+      MediaFileUri: "s3://" + "bucket-major-project" + "/" + filename,
     },
   });
 }
@@ -60,7 +60,7 @@ async function streamToString(stream) {
 async function getTranscriptionFile(filename) {
   const transcriptionFile = filename + '.transcription';
   const s3client = new S3Client({
-    region: 'eu-north-1',
+    region: 'ap-south-1',
     credentials: {
       accessKeyId: process.env.ACCE_KEY,
       secretAccessKey:process.env.SEC_ACCESS_KEY,
