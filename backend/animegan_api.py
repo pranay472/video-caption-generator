@@ -94,10 +94,20 @@ def convert_video(s3_bucket, s3_key):
         vid.release()
         video_out.release()
 
+        # --- Fix MP4 for browser streaming and re-encode to H.264 ---
+        import subprocess
+        fixed_output_path = output_path.replace('.mp4', '_fixed.mp4')
+        subprocess.run([
+            'ffmpeg', '-y', '-i', output_path,
+            '-movflags', 'faststart',
+            '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23',
+            fixed_output_path
+        ])
+
         # Upload converted video back to S3 with public read permissions
         output_key = f"anime_converted/{s3_key}"
         s3_client.upload_file(
-            output_path,
+            fixed_output_path,
             s3_bucket,
             output_key,
             ExtraArgs={
@@ -122,6 +132,7 @@ def convert_video(s3_bucket, s3_key):
         # Clean up temporary files
         os.remove(input_path)
         os.remove(output_path)
+        os.remove(fixed_output_path)
 
         return converted_url
 
@@ -150,6 +161,23 @@ def convert_video_api():
         return jsonify({"error": f"S3 operation failed: {str(e)}"}), 500
     except Exception as e:
         return jsonify({"error": f"Video conversion failed: {str(e)}"}), 500
+
+@app.route('/api/animegan/convert', methods=['POST'])
+def animegan_convert_api():
+    try:
+        data = request.json
+        # Use default bucket if not provided
+        s3_bucket = data.get('s3_bucket') or os.environ.get('S3_BUCKET')
+        s3_key = data.get('s3_key')
+        if not s3_bucket or not s3_key:
+            return jsonify({"error": "Missing S3 bucket or key"}), 400
+        converted_url = convert_video(s3_bucket, s3_key)
+        print(f"AnimeGAN converted video URL: {converted_url}")
+        return jsonify({"anime_s3_url": converted_url}), 200
+    except botocore.exceptions.ClientError as e:
+        return jsonify({"error": f"S3 operation failed: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"AnimeGAN video conversion failed: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(port=5001)
