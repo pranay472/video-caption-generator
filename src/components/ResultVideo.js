@@ -65,9 +65,7 @@ export default function ResultVideo({ filename, transcriptionItems }) {
         "-to",
         "00:00:10",
         "-vf",
-        `subtitles=subs.srt:fontsdir=./tmp:force_style='Fontname=Noto Sans,
-          FontSize=30,
-          MarginV=-100'`,
+        `subtitles=subs.srt:fontsdir=./tmp:force_style='Fontname=Noto Sans,FontSize=30,MarginV=70'`,
         "output.mp4",
       ]);
     const data = await ffmpeg.readFile("output.mp4");

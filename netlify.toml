@@ -1,0 +1,16 @@
+[build]
+  command = "npm run build"
+  publish = "src/.next"
+  functions = "netlify/functions"
+
+[dev]
+  command = "npm run dev"
+
+[build.environment]
+  NODE_VERSION = "18.16.0"
+
+[[redirects]]
+  from = "/api/*"
+  to = "http://localhost:5001/api/:splat"
+  status = 200
+  force = true
