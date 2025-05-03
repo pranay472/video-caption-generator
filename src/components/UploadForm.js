@@ -8,12 +8,14 @@ export default function UploadForm() {
   const [isUploading, setIsUploading] = useState(false);
   const [videoFile, setVideoFile] = useState(null);
   const [animeVideoUrl, setAnimeVideoUrl] = useState("");
+  const [originalVideoUrl, setOriginalVideoUrl] = useState("");
   const router = useRouter();
 
   async function handleFileChange(ev) {
     const files = ev.target.files;
     if (files.length > 0) {
       setVideoFile(files[0]);
+      setOriginalVideoUrl(URL.createObjectURL(files[0]));
     }
   }
 
@@ -31,18 +33,15 @@ export default function UploadForm() {
   async function handleAnimeConvert() {
     if (!videoFile) return;
     setIsUploading(true);
-    // Upload to S3 using existing logic
     const uploadRes = await axios.postForm('../api/upload', {
       file: videoFile,
     });
-    const s3_key = uploadRes.data.s3_key || uploadRes.data.newName; // adapt as per backend response
-    // Call AnimeGAN conversion endpoint (use correct backend URL)
-    const animeRes = await axios.post('http://localhost:5001/api/convert', {
-      s3_bucket: 'bucket-major-project',
-      s3_key: s3_key,
-    });
+    const s3_key = uploadRes.data.s3_key || uploadRes.data.newName;
     setIsUploading(false);
-    setAnimeVideoUrl(animeRes.data.converted_video_url);
+    const origUrl = encodeURIComponent(originalVideoUrl);
+    const s3KeyParam = encodeURIComponent(s3_key);
+    // Redirect immediately after upload, conversion will happen on result page
+    router.push(`/anime-result?original=${origUrl}&s3_key=${s3KeyParam}`);
   }
 
   return (
@@ -77,9 +76,34 @@ export default function UploadForm() {
         </button>
       </div>
       {animeVideoUrl && (
-        <div className="mt-6">
-          <h3 className="mb-2 text-lg font-bold">Anime Converted Video:</h3>
-          <video src={animeVideoUrl} controls className="w-full max-w-xl" />
+        <div className="mt-6 flex flex-col items-center">
+          <h3 className="mb-4 text-lg font-bold">Anime Conversion Result</h3>
+          <div className="flex flex-row justify-center items-center gap-8">
+            {/* Original Video */}
+            <div className="bg-gray-800/50 rounded-xl flex flex-col items-center p-2">
+              <span className="mb-2 text-sm text-white">Original</span>
+              <video
+                src={originalVideoUrl}
+                controls
+                className="w-[240px] h-[480px] object-contain rounded"
+                style={{background: '#222'}}
+              />
+            </div>
+            {/* Symbol (SparklesIcon or similar) */}
+            <div className="hidden sm:block">
+              <span className="text-4xl">→</span>
+            </div>
+            {/* Anime Converted Video */}
+            <div className="bg-gray-800/50 rounded-xl flex flex-col items-center p-2">
+              <span className="mb-2 text-sm text-white">Anime</span>
+              <video
+                src={animeVideoUrl}
+                controls
+                className="w-[240px] h-[480px] object-contain rounded"
+                style={{background: '#222'}}
+              />
+            </div>
+          </div>
         </div>
       )}
     </>

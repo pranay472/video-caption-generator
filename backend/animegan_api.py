@@ -149,14 +149,34 @@ def convert_video_api():
         data = request.json
         s3_bucket = data.get('s3_bucket')
         s3_key = data.get('s3_key')
-
-        if not s3_bucket or not s3_key:
-            return jsonify({"error": "Missing S3 bucket or key"}), 400
-
-        converted_url = convert_video(s3_bucket, s3_key)
+        output_key = f"anime_converted/{s3_key}"
+        lock_key = f"anime_converted/{s3_key}.lock"
+        # Check if already converted
+        try:
+            s3_client.head_object(Bucket=s3_bucket, Key=output_key)
+            converted_url = f'https://{s3_bucket}.s3.amazonaws.com/{output_key}'
+            return jsonify({"converted_video_url": converted_url}), 200
+        except botocore.exceptions.ClientError as e:
+            error_code = int(e.response.get('Error', {}).get('Code', 0))
+            if error_code != 404:
+                return jsonify({"error": f"S3 check failed: {str(e)}"}), 500
+        # Check for lock
+        try:
+            s3_client.head_object(Bucket=s3_bucket, Key=lock_key)
+            # Lock exists, conversion in progress
+            return jsonify({"status": "processing"}), 202
+        except botocore.exceptions.ClientError as e:
+            error_code = int(e.response.get('Error', {}).get('Code', 0))
+            if error_code != 404:
+                return jsonify({"error": f"S3 lock check failed: {str(e)}"}), 500
+        # No lock, create lock and start conversion
+        s3_client.put_object(Bucket=s3_bucket, Key=lock_key, Body=b'')
+        try:
+            converted_url = convert_video(s3_bucket, s3_key)
+        finally:
+            s3_client.delete_object(Bucket=s3_bucket, Key=lock_key)
         print(f"Converted video URL: {converted_url}")
         return jsonify({"converted_video_url": converted_url}), 200
-
     except botocore.exceptions.ClientError as e:
         return jsonify({"error": f"S3 operation failed: {str(e)}"}), 500
     except Exception as e:
