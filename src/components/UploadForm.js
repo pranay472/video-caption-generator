@@ -54,25 +54,25 @@ export default function UploadForm() {
           </div>
         </div>
       )}
-      <label className="bg-green-700 py-2 px-6 rounded-full inline-flex gap-2 border-2 border-purple-700/50 cursor-pointer">
+      <label className="bg-gray-100 border border-gray-300 text-gray-800 py-2 px-6 rounded-full inline-flex gap-2 cursor-pointer shadow-sm font-medium text-base hover:bg-gray-200 transition-colors duration-200">
         <UploadIcon />
-        <span>Choose File</span>
+        <span>{videoFile ? videoFile.name : "Choose Video File"}</span>
         <input onChange={handleFileChange} type="file" className="hidden" />
       </label>
-      <div className="mt-4 flex gap-4">
+      <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center items-center">
         <button
-          className="bg-blue-600 text-white py-2 px-4 rounded"
+          className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-5 rounded shadow-sm font-semibold text-base disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-400"
           onClick={handleAddSubtitles}
           disabled={!videoFile || isUploading}
         >
-          Add Subtitles
+          Generate Captions
         </button>
         <button
-          className="bg-purple-600 text-white py-2 px-4 rounded"
+          className="bg-purple-700 hover:bg-purple-800 text-white py-2 px-5 rounded shadow-sm font-semibold text-base disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-purple-400"
           onClick={handleAnimeConvert}
           disabled={!videoFile || isUploading}
         >
-          Anime Convert
+          Convert to Anime Style
         </button>
       </div>
       {animeVideoUrl && (
