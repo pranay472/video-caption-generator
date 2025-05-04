@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently \"npm:start-frontend\" \"npm:start-backend\"",
+    "start-frontend": "next dev",
+    "start-backend": "python ./backend/animegan_api.py",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -24,6 +26,8 @@
     "uniqid": "^5.4.0"
   },
   "devDependencies": {
+    "@netlify/next": "^1.4.9",
+    "concurrently": "^9.1.2",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "postcss": "^8",

@@ -1,6 +1,6 @@
 [build]
   command = "npm run build"
-  publish = "src/.next"
+  publish = ".next"
   functions = "netlify/functions"
 
 [dev]
@@ -8,6 +8,9 @@
 
 [build.environment]
   NODE_VERSION = "18.16.0"
+
+[[plugins]]
+  package = "@netlify/next"
 
 [[redirects]]
   from = "/api/*"
