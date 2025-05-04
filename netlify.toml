@@ -11,6 +11,6 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "http://localhost:5001/api/:splat"
+  to = "https://video-caption-generator-ggad.onrender.com/api/:splat"
   status = 200
   force = true
