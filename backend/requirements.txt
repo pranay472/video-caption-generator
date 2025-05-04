@@ -3,6 +3,8 @@ flask_cors
 tqdm
 onnxruntime
 boto3
+opencv-python
+numpy
 ffmpeg-python
 requests
 botocore
