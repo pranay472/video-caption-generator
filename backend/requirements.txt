@@ -1,5 +1,13 @@
 flask
+flask_cors
+os
+cv2
+numpy
+tqdm
+onnxruntime
 boto3
 ffmpeg-python
 requests
+dotenv
+botocore
 python-dotenv
