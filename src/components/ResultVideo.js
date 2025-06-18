@@ -7,7 +7,8 @@ import roboto from "../fonts/Roboto-Regular.ttf";
 import noto from "../fonts/NotoSans-Italic-VariableFont_wdth,wght.ttf"
 export default function ResultVideo({ filename, transcriptionItems }) {
   const videoUrl = "https://bucket-major-project.s3.amazonaws.com/" + filename;
-  const [loaded, setLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFfmpegReady, setIsFfmpegReady] = useState(false);
   const [primaryColour, setPrimaryColour] = useState("#FFFFFF");
   const [outlineColour, setOutlineColour] = useState("#000000");
   const [progress, setProgress] = useState(1);
@@ -20,22 +21,35 @@ export default function ResultVideo({ filename, transcriptionItems }) {
   }, []);
 
   const load = async () => {
-    const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
-    const ffmpeg = ffmpegRef.current;
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(
-        `${baseURL}/ffmpeg-core.wasm`,
-        "application/wasm"
-      ),
-    });
-    await ffmpeg.writeFile("./tmp/roboto.ttf", await fetchFile(roboto));
-    await ffmpeg.writeFile("./tmp/noto.ttf", await fetchFile(noto));
-    setLoaded(true);
+    try {
+      setIsLoading(true);
+      const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
+      const ffmpeg = ffmpegRef.current;
+      await ffmpeg.load({
+        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+        wasmURL: await toBlobURL(
+          `${baseURL}/ffmpeg-core.wasm`,
+          "application/wasm"
+        ),
+      });
+      await ffmpeg.writeFile("./tmp/roboto.ttf", await fetchFile(roboto));
+      await ffmpeg.writeFile("./tmp/noto.ttf", await fetchFile(noto));
+      setIsFfmpegReady(true);
+    } catch (error) {
+      console.error('Failed to load FFmpeg:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
   const transcode = async () => {
+    if (!isFfmpegReady) {
+      console.error('FFmpeg is not ready yet');
+      return;
+    }
+    setIsLoading(true);
+    try {
     const ffmpeg = ffmpegRef.current;
     const srt = transcriptionItemsToSrt(transcriptionItems);
     await ffmpeg.writeFile(filename, await fetchFile(videoUrl));
@@ -72,7 +86,12 @@ export default function ResultVideo({ filename, transcriptionItems }) {
     videoRef.current.src = URL.createObjectURL(
       new Blob([data.buffer], { type: "video/mp4" })
     );
-    setProgress(1);
+      setProgress(1);
+    } catch (error) {
+      console.error('Error during transcoding:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -80,14 +99,15 @@ export default function ResultVideo({ filename, transcriptionItems }) {
       <div className="mb-4">
         <button
           onClick={transcode}
-          className="bg-green-700 py-2 px-6 rounded-full inline-flex gap-2 border-2 border-purple-700/50 cursor-pointer"
+          disabled={!isFfmpegReady || isLoading}
+          className={`py-2 px-6 rounded-full inline-flex gap-2 border-2 border-purple-700/50 cursor-pointer ${isFfmpegReady && !isLoading ? 'bg-green-700 hover:bg-green-800' : 'bg-gray-500 cursor-not-allowed'}`}
         >
           <SparklesIcon />
-          <span>Insert Captions</span>
+          <span>{isLoading ? 'Processing...' : 'Insert Captions'}</span>
         </button>
       </div>
       <div className="rounded-xl overflow-hidden relative">
-         {progress && progress < 1 && (
+         {(isLoading || (progress && progress < 1)) && (
           <div className="absolute inset-0 bg-black/80 flex items-center">
             <div className="w-full text-center">
               <div className="bg-bg-gradient-from/60 mx-8 rounded-lg overflow-hidden relative">
