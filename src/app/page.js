@@ -6,7 +6,7 @@ export default function Home() {
   return (
     <>
       <PageHeaders
-      h1Text={'Add Captions to Your Videos'}
+      h1Text={'The Future of AI-Powered Video Enhancement'}
       h2Text={'Just upload the video and leave the rest to us'}/>
       <div className="text-center">
        <UploadForm/>
