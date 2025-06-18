@@ -41,8 +41,15 @@ s3_client = boto3.client(
     region_name=AWS_REGION
 )
 
+# --- ONNX Runtime CPU Session Setup (Full CPU Utilization) ---
 model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'Paprika_54.onnx')
-session = ort.InferenceSession(model_path)
+so = ort.SessionOptions()
+so.intra_op_num_threads = os.cpu_count()  # Use all CPU cores
+session = ort.InferenceSession(
+    model_path,
+    sess_options=so,
+    providers=['CPUExecutionProvider']
+)
 
 def post_process(img, wh):
     img = (img.squeeze() + 1.) / 2 * 255
